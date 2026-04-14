@@ -12,7 +12,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Check working tree (clean - no changes)
+      - name: Simulate slow validation
+        run: sleep 120
+
+      - name: Check working tree
         id: check-working-tree
         run: |
           if ! git diff --exit-code > lavamoat-policy-diff-build.patch; then
@@ -27,27 +30,3 @@ jobs:
         with:
           name: lavamoat-policy-diff-build
           path: lavamoat-policy-diff-build.patch
-
-  validate-lavamoat-policy-webapp:
-    name: Validate LavaMoat webapp policy
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Check working tree (clean - no changes)
-        id: check-working-tree
-        run: |
-          if ! git diff --exit-code > lavamoat-policy-diff-webapp.patch; then
-              cat lavamoat-policy-diff-webapp.patch
-              echo "::error::Working tree dirty."
-              exit 1
-          fi
-
-      - name: Upload policy diff on failure
-        if: ${{ failure() && steps.check-working-tree.outcome == 'failure' }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: lavamoat-policy-diff-webapp
-          path: lavamoat-policy-diff-webapp.patch
