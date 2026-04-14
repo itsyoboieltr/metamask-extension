@@ -12,11 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Simulate stale build policy
-        run: |
-          echo '// stale policy marker' >> lavamoat/build-system/policy.json
-
-      - name: Check working tree
+      - name: Check working tree (clean - no changes)
         id: check-working-tree
         run: |
           if ! git diff --exit-code > lavamoat-policy-diff-build.patch; then
