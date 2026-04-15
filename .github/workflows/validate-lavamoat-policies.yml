@@ -12,6 +12,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Simulate crash during lavamoat build
+        run: |
+          echo "Simulating yarn lavamoat:build:auto crashing..."
+          exit 1
+
       - name: Check working tree
         id: check-working-tree
         run: |
