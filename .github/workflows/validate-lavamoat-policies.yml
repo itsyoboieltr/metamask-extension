@@ -12,10 +12,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Simulate crash during lavamoat build
-        run: |
-          echo "Simulating yarn lavamoat:build:auto crashing..."
-          exit 1
+      - name: Simulate stale build policy
+        run: echo '// stale policy marker' >> lavamoat/build-system/policy.json
 
       - name: Check working tree
         id: check-working-tree
