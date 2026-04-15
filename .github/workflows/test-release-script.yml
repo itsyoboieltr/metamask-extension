@@ -4,7 +4,9 @@ name: Test release-create-gh-release.sh
 # Delete this file after validation.
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - test/release-script-validation
 
 permissions:
   contents: write
