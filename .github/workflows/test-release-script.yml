@@ -82,10 +82,3 @@ jobs:
             echo "${actual}"
             exit 1
           fi
-
-      # Clean up: delete the test release and tags
-      - name: Cleanup test release
-        if: always()
-        run: |
-          gh release delete "${RELEASE_TAG}" --yes --cleanup-tag 2>/dev/null || true
-          gh api --method DELETE "/repos/${GITHUB_REPOSITORY}/git/refs/tags/${FLASK_TAG}" 2>/dev/null || true
