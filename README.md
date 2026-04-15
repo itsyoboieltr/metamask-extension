@@ -336,3 +336,4 @@ Whenever you change dependencies (adding, removing, or updating, either in `pack
 <!-- test VALIDATION_FAILED path -->
 <!-- test validation-passed path -->
 <!-- test validation crash -->
+<!-- test diffs applied -->
