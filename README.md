@@ -337,3 +337,4 @@ Whenever you change dependencies (adding, removing, or updating, either in `pack
 <!-- test validation-passed path -->
 <!-- test validation crash -->
 <!-- test diffs applied -->
+<!-- test clean -->
