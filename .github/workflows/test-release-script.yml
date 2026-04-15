@@ -1,0 +1,89 @@
+name: Test release-create-gh-release.sh
+
+# Temporary workflow to verify the release script changes.
+# Delete this file after validation.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test-release-script:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_TAG: v0.0.0-test-release-script
+      RELEASE_SHA: ${{ github.sha }}
+      FLASK_TAG: v0.0.0-test-release-script-flask.0
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      # Create mock browserify artifacts (same naming as real builds)
+      - name: Create mock browserify artifacts
+        run: |
+          mkdir -p build-dist-browserify/builds
+          mkdir -p build-dist-mv2-browserify/builds
+          mkdir -p build-flask-browserify/builds
+          mkdir -p build-flask-mv2-browserify/builds
+          echo "mock" | zip build-dist-browserify/builds/metamask-chrome-0.0.0.zip -
+          echo "mock" | zip build-dist-mv2-browserify/builds/metamask-firefox-0.0.0.zip -
+          echo "mock" | zip build-flask-browserify/builds/metamask-flask-chrome-0.0.0.zip -
+          echo "mock" | zip build-flask-mv2-browserify/builds/metamask-flask-firefox-0.0.0.zip -
+
+      # Create mock webpack artifacts (webpack uses version-name with build type suffix)
+      - name: Create mock webpack artifacts
+        run: |
+          mkdir -p build-dist-webpack/builds
+          mkdir -p build-dist-mv2-webpack/builds
+          mkdir -p build-flask-webpack/builds
+          mkdir -p build-flask-mv2-webpack/builds
+          echo "mock" | zip build-dist-webpack/builds/metamask-chrome-0.0.0.zip -
+          echo "mock" | zip build-dist-mv2-webpack/builds/metamask-firefox-0.0.0.zip -
+          echo "mock" | zip build-flask-webpack/builds/metamask-chrome-0.0.0-flask.0.zip -
+          echo "mock" | zip build-flask-mv2-webpack/builds/metamask-firefox-0.0.0-flask.0.zip -
+
+      - name: Run release script
+        run: .github/scripts/release-create-gh-release.sh
+
+      - name: Verify release assets
+        run: |
+          echo "=== Release assets ==="
+          gh release view "${RELEASE_TAG}" --json assets --jq '.assets[].name' | sort
+
+          echo ""
+          echo "=== Expected 8 assets ==="
+          expected=(
+            "metamask-chrome-0.0.0.zip"
+            "metamask-firefox-0.0.0.zip"
+            "metamask-flask-chrome-0.0.0.zip"
+            "metamask-flask-firefox-0.0.0.zip"
+            "metamask-chrome-0.0.0-webpack.zip"
+            "metamask-firefox-0.0.0-webpack.zip"
+            "metamask-chrome-0.0.0-flask.0-webpack.zip"
+            "metamask-firefox-0.0.0-flask.0-webpack.zip"
+          )
+
+          actual=$(gh release view "${RELEASE_TAG}" --json assets --jq '.assets[].name' | sort)
+          expected_sorted=$(printf '%s\n' "${expected[@]}" | sort)
+
+          if [[ "${actual}" == "${expected_sorted}" ]]; then
+            echo "✅ All 8 assets match expected names"
+          else
+            echo "::error::Asset mismatch!"
+            echo "Expected:"
+            echo "${expected_sorted}"
+            echo "Actual:"
+            echo "${actual}"
+            exit 1
+          fi
+
+      # Clean up: delete the test release and tags
+      - name: Cleanup test release
+        if: always()
+        run: |
+          gh release delete "${RELEASE_TAG}" --yes --cleanup-tag 2>/dev/null || true
+          gh api --method DELETE "/repos/${GITHUB_REPOSITORY}/git/refs/tags/${FLASK_TAG}" 2>/dev/null || true
